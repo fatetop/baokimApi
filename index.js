@@ -19,12 +19,15 @@ module.exports = class baoKimPay {
         this.devHost = "https://sandbox-api.baokim.vn/payment/";
         this.proHost = "https://api.baokim.vn/payment/";
         this.urlList = {
-            // 获取银行卡列表
-            bankList: "api/v4/bank/list",
-            
+            // 获取银行api
+            bankApi: "api/v4/bank/list",
+            // 获取银行支付api
+            bankPayApi: "api/v4/bpm/list",
         };
-        // 银行卡列表
-        this.bankList = [];
+        // 银行api列表
+        this.bankApiList = [];
+        // 银行支付api列表
+        this.bankPayApiList = [];
     }
 
     // 生成随机字符串
@@ -91,8 +94,8 @@ module.exports = class baoKimPay {
         return this.jwt;
     }
 
-    // 获取银行卡列表
-    async getBanklist(initData = {}) {
+    // 获取银行api列表
+    async getBankApiList(initData = {}) {
         let jwt = this.getToken();
         let { lbAvailable, offset, limit } = initData;
         // 设置请求body
@@ -107,7 +110,7 @@ module.exports = class baoKimPay {
         // 请求配置
         const opt = {
             method: 'GET',
-            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.bankList,
+            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.bankApi,
             qs: reqBody,
             headers: {
                 'Content-Type': 'application/json',
@@ -125,9 +128,40 @@ module.exports = class baoKimPay {
         if (body.statusCode != 200) {
             throw new Error(`${body.name}: ${body.message}`);
         }
-        this.bankList = body.body;
-        return this.bankList;
+        this.bankApiList = body.body;
+        return this.bankApiList;
     }
+
+    // 获取银行支付api列表
+    async getBankPayApiList() {
+        let jwt = this.getToken();
+        // 设置请求body
+        let reqBody = { jwt };
+        // 请求配置
+        const opt = {
+            method: 'GET',
+            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.bankPayApi,
+            qs: reqBody,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            json: true,
+            timeout: 1000 * 30,
+            transform: function (body, response, resolveWithFullResponse) {
+                return response
+            }
+        };
+        // 请求
+        let body = await request(opt).catch(err => {
+            return think.isError(err) ? err : new Error(err)
+        });
+        if (body.statusCode != 200) {
+            throw new Error(`${body.name}: ${body.message}`);
+        }
+        this.bankPayApiList = body.body;
+        return this.bankPayApiList;
+    }
+
 
 
 };
