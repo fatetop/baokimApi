@@ -31,14 +31,22 @@ module.exports = class baoKimPay {
             // get bank pay api
             bankPayApi: "api/v4/bpm/list",
             // send order api
-            sendLoanApi: "api/v4/order/send"
+            sendOrderApi: "api/v4/order/send",
+            // order detail api
+            orderDetailApi: "api/v4/order/detail",
+            // order list detail api
+            orderListDetailApi: "api/v4/order/list"
         };
         // bank api list
         this.bankApiList = {};
         // bank pay api list
         this.bankPayApiList = {};
         // send order api results
-        this.sendloanRes = {};
+        this.sendOrderRes = {};
+        // order detail api results
+        this.orderDetailRes = {};
+        // order detail list api results
+        this.orderListDetailRes = {};
     }
 
     /**
@@ -220,7 +228,7 @@ module.exports = class baoKimPay {
      * @param {string} customerAddress Customer address
      * @returns [API Sending order information from user's application to Bao Kim to make payment.]
      */
-    async sendloan(initData = {}) {
+    async sendOrder(initData = {}) {
         let {
             mrcOrderId, totalAmount, description, urlSuccess, merchantId, urlDetail, lang, bpmId, acceptBank,
             acceptCc, acceptQrpay, webhooks, customerEmail, customerPhone, customerName, customerAddress
@@ -260,7 +268,7 @@ module.exports = class baoKimPay {
         // request
         const opt = {
             method: 'POST',
-            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.sendLoanApi,
+            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.sendOrderApi,
             qs: reqQs,
             form: reqBody,
             headers: {
@@ -280,8 +288,98 @@ module.exports = class baoKimPay {
             throw new Error(`${body.name}: ${body.message}`);
         }
         // set results
-        this.sendloanRes = body.body;
-        return this.sendloanRes;
+        this.sendOrderRes = body.body;
+        return this.sendOrderRes;
+    }
+
+    /**
+     * @param {string} id order id
+     * @param {string} mrcOrderId merchant's order code
+     * @returns API Get order information details, can be used to check the status of order payment.
+     */
+    async orderDetail(initData = {}) {
+        let { mrcOrderId, id } = initData;
+        // required params
+        if ((!mrcOrderId) && (!id)) throw new Error("Choose one of mrcOrderId and id");
+        // get jwt token
+        let jwt = this.getToken();
+        // set request params
+        let reqQs = { jwt };
+        if (mrcOrderId) reqQs.mrc_order_id = mrcOrderId;
+        if (id) reqQs.id = id;
+        // request
+        const opt = {
+            method: 'GET',
+            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.orderDetailApi,
+            qs: reqQs,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            json: true,
+            timeout: 1000 * 30,
+            transform: function (body, response, resolveWithFullResponse) {
+                return response
+            }
+        };
+        // request results
+        let body = await request(opt).catch(err => {
+            return think.isError(err) ? err : new Error(err)
+        });
+        if (body.statusCode != 200) {
+            throw new Error(`${body.name}: ${body.message}`);
+        }
+        // set results
+        this.orderDetailRes = body.body;
+        return this.orderDetailRes;
+    }
+
+    /**
+     * @param {string} mrcOrderId merchant's order code
+     * @param {string} txnId Trading code
+     * @param {string} stat order status
+     * @param {string} fromDate order from the day
+     * @param {string} toDate order arrival date
+     * @param {int} perPage Total number of lines per page
+     * @param {int} page The page index to retrieve
+     * @returns API Get list of user orders, can be used to match orders between applications and Bao Kim.
+     */
+    async orderListDetail(initData = {}) {
+        let { mrcOrderId, txnId, stat, fromDate, toDate, perPage, page } = initData;
+        // get jwt token
+        let jwt = this.getToken();
+        // set request params
+        let reqQs = { jwt };
+        if (mrcOrderId) reqQs.mrc_order_id = mrcOrderId;
+        if (txnId) reqQs.txn_id = txnId;
+        if (stat) reqQs.stat = stat;
+        if (fromDate) reqQs.from_date = fromDate;
+        if (toDate) reqQs.to_date = toDate;
+        if (perPage) reqQs.per_page = perPage;
+        if (page) reqQs.page = page;
+        // request
+        const opt = {
+            method: 'GET',
+            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.orderListDetailApi,
+            qs: reqQs,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            json: true,
+            timeout: 1000 * 30,
+            transform: function (body, response, resolveWithFullResponse) {
+                return response
+            }
+        };
+        // request results
+        let body = await request(opt).catch(err => {
+            return think.isError(err) ? err : new Error(err)
+        });
+        if (body.statusCode != 200) {
+            throw new Error(`${body.name}: ${body.message}`);
+        }
+        // set results
+        this.orderListDetailRes = body.body;
+        return this.orderListDetailRes;
     }
 
 };
