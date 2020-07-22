@@ -35,7 +35,9 @@ module.exports = class baoKimPay {
             // order detail api
             orderDetailApi: "api/v4/order/detail",
             // order list detail api
-            orderListDetailApi: "api/v4/order/list"
+            orderListDetailApi: "api/v4/order/list",
+            // cancel order api
+            cancelOrderApi: "api/v4/order/cancel"
         };
         // bank api list
         this.bankApiList = {};
@@ -47,6 +49,8 @@ module.exports = class baoKimPay {
         this.orderDetailRes = {};
         // order detail list api results
         this.orderListDetailRes = {};
+        // cancel order api results
+        this.cancelOrderRes = {};
     }
 
     /**
@@ -380,6 +384,47 @@ module.exports = class baoKimPay {
         // set results
         this.orderListDetailRes = body.body;
         return this.orderListDetailRes;
+    }
+
+    /**
+     * @param {int} id order id 
+     * @returns Order cancellation API, use in case you no longer want to receive payment for your order
+     */
+    async cancelOrder(initData = {}) {
+        let { id } = initData;
+        // required params
+        if (!id) throw new Error("id is not exists");
+        let formParams = { id };
+        // get jwt token
+        let jwt = this.getToken({ formParams });
+        // set request params
+        let reqQs = { jwt };
+        let reqBody = formParams;
+        // request
+        const opt = {
+            method: 'POST',
+            url: (this.isDev ? this.devHost : this.proHost) + this.urlList.cancelOrderApi,
+            qs: reqQs,
+            form: reqBody,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            json: true,
+            timeout: 1000 * 30,
+            transform: function (body, response, resolveWithFullResponse) {
+                return response
+            }
+        };
+        // request results
+        let body = await request(opt).catch(err => {
+            return think.isError(err) ? err : new Error(err)
+        });
+        if (body.statusCode != 200) {
+            throw new Error(`${body.name}: ${body.message}`);
+        }
+        // set results
+        this.cancelOrderRes = body.body;
+        return this.cancelOrderRes;
     }
 
 };
