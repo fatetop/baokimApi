@@ -2,8 +2,8 @@
  * @desc baokim pay api
  */
 
-import Jwt from 'jwt-simple';
-import request from 'request-promise';
+const Jwt = require("jwt-simple");
+const request = require("request-promise");
 
 module.exports = class baoKimPay {
     /**
