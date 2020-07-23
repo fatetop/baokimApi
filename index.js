@@ -1,7 +1,6 @@
 /**
  * @desc baokim pay api
  */
-
 const Jwt = require("jwt-simple");
 const request = require("request-promise");
 
