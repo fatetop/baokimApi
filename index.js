@@ -1,6 +1,8 @@
 /**
  * @desc baokim pay api
  */
+
+const crypto = require('crypto');
 const Jwt = require("jwt-simple");
 const request = require("request-promise");
 
@@ -50,6 +52,23 @@ module.exports = class baoKimPay {
         this.orderListDetailRes = {};
         // cancel order api results
         this.cancelOrderRes = {};
+        // webhooks sign
+        this.webhooksSign = "";
+    }
+
+    /**
+     * @param {string} params JSON.stringify(Object)
+     * @returns webhooks sign
+     */
+    getWebhooksSign(params) {
+        // create hmac
+        const hmac = crypto.createHmac('sha256', this.apiSecret);
+        // update
+        const up = hmac.update(params);
+        // digest 
+        const sign = up.digest('hex');
+        this.webhooksSign = sign;
+        return this.webhooksSign;
     }
 
     /**
@@ -384,7 +403,7 @@ module.exports = class baoKimPay {
         this.orderListDetailRes = body.body;
         return this.orderListDetailRes;
     }
-
+    
     /**
      * @param {int} id order id 
      * @returns Order cancellation API, use in case you no longer want to receive payment for your order
