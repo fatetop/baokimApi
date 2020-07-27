@@ -56,20 +56,20 @@ module.exports = class baoKimPay {
         this.webhooksSign = "";
     }
 
-    /**
-     * @param {string} params JSON.stringify(Object)
-     * @returns webhooks sign
-     */
-    getWebhooksSign(params) {
-        // create hmac
-        const hmac = crypto.createHmac('sha256', this.apiSecret);
-        // update
-        const up = hmac.update(params);
-        // digest 
-        const sign = up.digest('hex');
-        this.webhooksSign = sign;
-        return this.webhooksSign;
-    }
+    // /**
+    //  * @param {string} params JSON.stringify(Object)
+    //  * @returns webhooks sign
+    //  */
+    // getWebhooksSign(params) {
+    //     // create hmac
+    //     const hmac = crypto.createHmac('sha256', this.apiSecret);
+    //     // update
+    //     const up = hmac.update(params);
+    //     // digest 
+    //     const sign = up.digest('hex');
+    //     this.webhooksSign = sign;
+    //     return this.webhooksSign;
+    // }
 
     /**
      * @param {int} e Specify length, default 32
